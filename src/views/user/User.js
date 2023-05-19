@@ -109,7 +109,32 @@ const User = () => {
           {
             accessorKey: 'roleType',
             enableClickToCopy: true,
-            header: 'Role',
+            header: 'Role Type',
+          },
+          {
+            accessorKey: 'timestamp',
+            header: 'Created At',
+            size: 200,
+            Cell: ({ cell }) => {
+              // console.info(cell.getValue())
+              const date = new Date(cell.getValue())
+              const formattedDate = date.toLocaleDateString('en-US', {
+                month: '2-digit',
+                day: '2-digit',
+                year: 'numeric',
+              })
+
+              const formattedTime = date.toLocaleTimeString('en-US', {
+                hour: '2-digit',
+                minute: '2-digit',
+                second: '2-digit',
+              })
+
+              const _date = formattedDate === 'Invalid Date' ? '' : formattedDate
+              const _time = formattedTime === 'Invalid Date' ? '' : formattedTime
+
+              return <>{_date + ' ' + _time}</>
+            },
           },
         ],
       },
