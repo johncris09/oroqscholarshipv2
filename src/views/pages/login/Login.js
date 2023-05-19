@@ -25,7 +25,7 @@ import {
   signInWithPopup,
   auth,
   push,
-  provider,
+  googleAuthProvider,
   serverTimestamp,
 } from './../../../firebase'
 import { FacebookLoginButton, GoogleLoginButton } from 'react-social-login-buttons'
@@ -81,7 +81,7 @@ const Login = () => {
   // Set up the Google authentication handler
   const handleGoogleAuth = async () => {
     try {
-      const result = await signInWithPopup(auth, provider)
+      const result = await signInWithPopup(auth, googleAuthProvider)
       const { user } = result
 
       checkUserExists(user.email)
