@@ -3,7 +3,7 @@ import MaterialReactTable from 'material-react-table'
 import RefreshIcon from '@mui/icons-material/Refresh'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { Box, MenuItem, ListItemIcon, IconButton, Tooltip } from '@mui/material'
-import { database, ref, get, set, update } from './../../firebase'
+import { database, ref, get, set, update, onValue } from './../../firebase'
 import {
   AccountCircle,
   Check,
@@ -24,15 +24,18 @@ const User = () => {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = () => {
     const databaseRef = ref(database, _table)
-    const snapshot = await get(databaseRef)
-    const firebaseData = snapshot.val()
-    const transformedData = Object.entries(firebaseData || {}).map(([key, item]) => ({
-      id: key,
-      ...item,
-    }))
-    setData(transformedData)
+
+    onValue(databaseRef, (snapshot) => {
+      const firebaseData = snapshot.val()
+      const transformedData = Object.entries(firebaseData || {}).map(([key, item]) => ({
+        id: key,
+        ...item,
+      }))
+
+      setData(transformedData)
+    })
   }
 
   const columns = useMemo(
