@@ -1,21 +1,40 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { NavLink, useLocation } from 'react-router-dom'
 import PropTypes from 'prop-types'
-
+import { get, database, ref, query, orderByChild, equalTo, onValue } from './../firebase'
 import { CBadge } from '@coreui/react'
-
 export const AppSidebarNav = ({ items }) => {
+  const [totalPending, setTotalPending] = useState(null)
+  const countPendingStatus = async () => {
+    const userRef = ref(database, 'users')
+    const queryRef = query(userRef, orderByChild('status'), equalTo('Pending'))
+    onValue(queryRef, (snapshot) => {
+      const userData = snapshot.val()
+      const numPendingUsers = userData ? Object.keys(userData).length : 0
+      setTotalPending(numPendingUsers)
+    })
+  }
+
+  useEffect(() => {
+    countPendingStatus()
+  }, [])
+
   const location = useLocation()
   const navLink = (name, icon, badge) => {
     return (
       <>
         {icon && icon}
         {name && name}
-        {badge && (
+        {name === 'User' && (
+          <span className="ms-auto">
+            <CBadge color="warning">{totalPending}</CBadge>
+          </span>
+        )}
+        {/* {badge && (
           <CBadge color={badge.color} className="ms-auto">
             {badge.text}
           </CBadge>
-        )}
+        )} */}
       </>
     )
   }
