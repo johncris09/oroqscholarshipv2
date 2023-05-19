@@ -4,7 +4,15 @@ import RefreshIcon from '@mui/icons-material/Refresh'
 import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
 import { Box, MenuItem, ListItemIcon, IconButton, Tooltip } from '@mui/material'
 import { database, ref, get, set, update } from './../../firebase'
-import { AccountCircle, Check, CheckBox, PendingActions, Send } from '@mui/icons-material'
+import {
+  AccountCircle,
+  Check,
+  CheckBox,
+  Close,
+  DeleteOutline,
+  PendingActions,
+  Send,
+} from '@mui/icons-material'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 const MySwal = withReactContent(Swal)
@@ -89,6 +97,7 @@ const User = () => {
                 >
                   {cell.getValue() === 'Pending' && <PendingActions />}
                   {cell.getValue() === 'Approved' && <Check />}
+                  {cell.getValue() === 'Disapproved' && <Close />}
                   {cell.getValue()}
                 </Box>
               </>
@@ -133,7 +142,8 @@ const User = () => {
                 </Tooltip>
               )}
               renderRowActionMenuItems={({ row, closeMenu }) => [
-                row.original.roleType === 'SuperAdmin' ? null : (
+                row.original.roleType === 'SuperAdmin' ? null : row.original.status ===
+                  'Pending' ? (
                   <MenuItem
                     key={0}
                     onClick={() => {
@@ -174,6 +184,52 @@ const User = () => {
                       <CheckBox />
                     </ListItemIcon>
                     Approved
+                  </MenuItem>
+                ) : (
+                  <MenuItem
+                    key={0}
+                    onClick={() => {
+                      console.info(row.original)
+                      closeMenu()
+                      MySwal.fire({
+                        title: 'Confirm Disapproval',
+                        text: 'Are you sure you want to disapprove the user?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, disapproved it!',
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          // Update operation
+                          const itemRef = ref(database, `${_table}/${row.original.id}`)
+                          update(itemRef, {
+                            status: 'Disapproved',
+                          })
+                            .then(() => {
+                              MySwal.fire(
+                                'User Dispproved!',
+                                'The user has been successfully disapproved.',
+                                'success',
+                              )
+                            })
+                            .catch((error) => {
+                              MySwal.fire(
+                                'User Disapproved!',
+                                'Error updating user status.',
+                                'error',
+                              )
+                            })
+                          fetchData()
+                        }
+                      })
+                    }}
+                    sx={{ m: 0 }}
+                  >
+                    <ListItemIcon>
+                      <Close />
+                    </ListItemIcon>
+                    Disapproved
                   </MenuItem>
                 ),
                 <MenuItem
