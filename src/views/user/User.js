@@ -1,41 +1,17 @@
-import React, { useEffect, useRef, useState, useMemo } from 'react'
+import React, { useEffect, useState, useMemo } from 'react'
 import MaterialReactTable from 'material-react-table'
-import { CButton, CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
-import PropTypes from 'prop-types'
-import { Box, MenuItem, Typography, ListItemIcon } from '@mui/material'
+import RefreshIcon from '@mui/icons-material/Refresh'
+import { CCard, CCardBody, CCardHeader, CCol, CRow } from '@coreui/react'
+import { Box, MenuItem, ListItemIcon, IconButton, Tooltip } from '@mui/material'
+import { database, ref, get, set, update } from './../../firebase'
+import { AccountCircle, Check, CheckBox, PendingActions, Send } from '@mui/icons-material'
+import Swal from 'sweetalert2'
+import withReactContent from 'sweetalert2-react-content'
+const MySwal = withReactContent(Swal)
 
-import { database, ref, get, set, update, remove, push } from './../../firebase'
-
-import { AccountCircle, Send } from '@mui/icons-material'
-const data = [
-  {
-    id: 1,
-    firstName: 'John',
-    lastName: 'Doe',
-    avatar:
-      'https://lh3.googleusercontent.com/a/AGNmyxaZUcHf6li9ouZpHc3ZJnOCpk0io5f_jw2HAIf6Kw=s96-c',
-    email: 'john.doe@example.com',
-    salary: 50000,
-    jobTitle: 'Software Engineer',
-    startDate: '2021-01-01',
-  },
-  {
-    id: 2,
-    firstName: 'Jane',
-    lastName: 'Smith',
-    avatar:
-      'https://lh3.googleusercontent.com/a/AGNmyxaZUcHf6li9ouZpHc3ZJnOCpk0io5f_jw2HAIf6Kw=s96-c',
-    email: 'jane.smith@example.com',
-    salary: 75000,
-    jobTitle: 'Project Manager',
-    startDate: '2020-06-15',
-  },
-  // Add more data objects as needed
-]
 const User = () => {
   const _table = 'users'
   const [data, setData] = useState([])
-
   useEffect(() => {
     fetchData()
   }, [])
@@ -111,6 +87,8 @@ const User = () => {
                     p: '0.25rem',
                   })}
                 >
+                  {cell.getValue() === 'Pending' && <PendingActions />}
+                  {cell.getValue() === 'Approved' && <Check />}
                   {cell.getValue()}
                 </Box>
               </>
@@ -147,9 +125,59 @@ const User = () => {
               enableRowActions
               initialState={{ density: 'compact' }}
               positionToolbarAlertBanner="bottom"
-              renderRowActionMenuItems={({ closeMenu }) => [
+              renderTopToolbarCustomActions={() => (
+                <Tooltip arrow title="Refresh Data">
+                  <IconButton onClick={fetchData}>
+                    <RefreshIcon />
+                  </IconButton>
+                </Tooltip>
+              )}
+              renderRowActionMenuItems={({ row, closeMenu }) => [
+                row.original.roleType === 'SuperAdmin' ? null : (
+                  <MenuItem
+                    key={0}
+                    onClick={() => {
+                      console.info(row.original)
+                      closeMenu()
+                      MySwal.fire({
+                        title: 'Confirm Approval',
+                        text: 'Are you sure you want to approve the user?',
+                        icon: 'warning',
+                        showCancelButton: true,
+                        confirmButtonColor: '#3085d6',
+                        cancelButtonColor: '#d33',
+                        confirmButtonText: 'Yes, approved it!',
+                      }).then((result) => {
+                        if (result.isConfirmed) {
+                          // Update operation
+                          const itemRef = ref(database, `${_table}/${row.original.id}`)
+                          update(itemRef, {
+                            status: 'Approved',
+                          })
+                            .then(() => {
+                              MySwal.fire(
+                                'User Approved!',
+                                'The user has been successfully approved.',
+                                'success',
+                              )
+                            })
+                            .catch((error) => {
+                              MySwal.fire('User Approved!', 'Error updating user status.', 'error')
+                            })
+                          fetchData()
+                        }
+                      })
+                    }}
+                    sx={{ m: 0 }}
+                  >
+                    <ListItemIcon>
+                      <CheckBox />
+                    </ListItemIcon>
+                    Approved
+                  </MenuItem>
+                ),
                 <MenuItem
-                  key={0}
+                  key={1}
                   onClick={() => {
                     // View profile logic...
                     closeMenu()
@@ -162,7 +190,7 @@ const User = () => {
                   View Profile
                 </MenuItem>,
                 <MenuItem
-                  key={1}
+                  key={2}
                   onClick={() => {
                     // Send email logic...
                     closeMenu()
