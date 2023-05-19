@@ -105,12 +105,21 @@ const Login = () => {
     <div className="bg-light min-vh-100 d-flex flex-row align-items-center">
       <CContainer>
         <CRow className="justify-content-center">
-          <CCol md={6}>
+          <CCol xs={12} sm={12} lg={6} xl={6}>
             <CCardGroup>
               <CCard className="p-4">
                 <CCardBody>
                   <div className="text-center">
-                    <CImage rounded src={logo} width={200} height={200} />
+                    <CImage
+                      rounded
+                      src={logo}
+                      style={{
+                        width: '100%',
+                        height: 'auto',
+                        maxWidth: '150px',
+                        maxHeight: '150px',
+                      }}
+                    />
                   </div>
                   <CForm>
                     <h1 className="text-center">Login</h1>
