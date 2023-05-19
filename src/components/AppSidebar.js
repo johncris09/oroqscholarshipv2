@@ -1,33 +1,43 @@
-import React from 'react'
+import React, { useEffect, useState } from 'react'
 import { useSelector, useDispatch } from 'react-redux'
 
-import {
-  CSidebar,
-  CSidebarBrand,
-  CSidebarNav,
-  CSidebarToggler,
-  CAvatar,
-  CImage,
-} from '@coreui/react'
+import { CSidebar, CSidebarBrand, CSidebarNav, CSidebarToggler, CImage } from '@coreui/react'
 import CIcon from '@coreui/icons-react'
-
 import { AppSidebarNav } from './AppSidebarNav'
-
-import { logoNegative } from 'src/assets/brand/logo-negative'
 import { sygnet } from 'src/assets/brand/sygnet'
-
 import SimpleBar from 'simplebar-react'
 import 'simplebar/dist/simplebar.min.css'
-
+import { auth, ref, database, onValue, query, orderByChild, equalTo } from './../firebase'
 // sidebar nav config
 import navigation from '../_nav'
-
 import logo from './../assets/images/logo.png'
-
 const AppSidebar = () => {
   const dispatch = useDispatch()
   const unfoldable = useSelector((state) => state.sidebarUnfoldable)
   const sidebarShow = useSelector((state) => state.sidebarShow)
+
+  const [status, setStatus] = useState(null)
+
+  useEffect(() => {
+    const unsubscribe = auth.onAuthStateChanged((user) => {
+      if (user) {
+        // User is signed in
+        const userRef = ref(database, 'users')
+        const queryRef = query(userRef, orderByChild('email'), equalTo(user.email))
+        onValue(queryRef, (snapshot) => {
+          const userData = snapshot.val()
+          if (userData) {
+            const userId = Object.keys(userData)[0]
+            setStatus(userData[userId].status)
+          }
+        })
+      } else {
+        // User is signed out
+      }
+    })
+
+    return () => unsubscribe()
+  }, [])
 
   return (
     <CSidebar
@@ -48,9 +58,7 @@ const AppSidebar = () => {
         <CIcon className="sidebar-brand-narrow" icon={sygnet} height={35} />
       </CSidebarBrand>
       <CSidebarNav>
-        <SimpleBar>
-          <AppSidebarNav items={navigation} />
-        </SimpleBar>
+        <SimpleBar>{status === 'Approved' ? <AppSidebarNav items={navigation} /> : ''}</SimpleBar>
       </CSidebarNav>
       <CSidebarToggler
         className="d-none d-lg-flex"

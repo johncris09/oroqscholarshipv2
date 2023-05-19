@@ -1,17 +1,26 @@
-import React, { useState, useEffect } from 'react'
+import React, { useState, useEffect, Component } from 'react'
 import { AppContent, AppSidebar, AppFooter, AppHeader } from '../components/index'
 import Login from 'src/views/pages/login/Login'
-import { TroubleshootOutlined } from '@mui/icons-material'
-import { database, provider, ref, set, auth, signInWithPopup, push } from './../firebase'
-
+import { auth, ref, database, onValue, query, orderByChild, equalTo } from './../firebase'
 const DefaultLayout = () => {
   const [visible, setVisible] = useState(false)
   const [user, setUser] = useState(null)
+  const [status, setStatus] = useState(null)
   useEffect(() => {
     const unsubscribe = auth.onAuthStateChanged((currentUser) => {
       if (currentUser) {
         // User is authenticated
         setUser(currentUser)
+        const userRef = ref(database, 'users')
+        const queryRef = query(userRef, orderByChild('email'), equalTo(currentUser.email))
+        onValue(queryRef, (snapshot) => {
+          const userData = snapshot.val()
+          if (userData) {
+            const userId = Object.keys(userData)[0]
+            setStatus(userData[userId].status)
+          }
+        })
+        console.info(status)
       } else {
         // User is not authenticated
         setUser(null)
@@ -26,6 +35,8 @@ const DefaultLayout = () => {
     <div>
       {!user ? (
         <Login />
+      ) : status === 'aPending' ? (
+        <div>Pending Approval</div>
       ) : (
         <>
           <AppSidebar />
