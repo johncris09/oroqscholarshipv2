@@ -10,7 +10,7 @@ export const AppSidebarNav = ({ items }) => {
     const queryRef = query(userRef, orderByChild('status'), equalTo('Pending'))
     onValue(queryRef, (snapshot) => {
       const userData = snapshot.val()
-      const numPendingUsers = userData ? Object.keys(userData).length : 0
+      const numPendingUsers = userData ? Object.keys(userData).length : ''
       setTotalPending(numPendingUsers)
     })
   }
@@ -25,7 +25,7 @@ export const AppSidebarNav = ({ items }) => {
       <>
         {icon && icon}
         {name && name}
-        {name === 'User' && (
+        {name === 'User' && totalPending && (
           <span className="ms-auto">
             <CBadge color="warning">{totalPending}</CBadge>
           </span>
