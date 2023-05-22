@@ -18,7 +18,7 @@ import {
 import { MenuItem, ListItemIcon } from '@mui/material'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
-import { database, ref, get, set, update, remove, push } from './../../../firebase'
+import { database, ref, get, set, update, remove, push, onValue } from './../../../firebase'
 import { DeleteOutline, EditSharp } from '@mui/icons-material'
 import { FontAwesomeIcon } from '@fortawesome/react-fontawesome'
 import { faPlusCircle } from '@fortawesome/free-solid-svg-icons'
@@ -41,15 +41,18 @@ const CollegeSchool = () => {
     fetchData()
   }, [])
 
-  const fetchData = async () => {
+  const fetchData = () => {
     const databaseRef = ref(database, _table)
-    const snapshot = await get(databaseRef)
-    const firebaseData = snapshot.val()
-    const transformedData = Object.entries(firebaseData || {}).map(([key, item]) => ({
-      id: key,
-      ...item,
-    }))
-    setData(transformedData)
+
+    onValue(databaseRef, (snapshot) => {
+      const firebaseData = snapshot.val()
+      const transformedData = Object.entries(firebaseData || {}).map(([key, item]) => ({
+        id: key,
+        ...item,
+      }))
+
+      setData(transformedData)
+    })
   }
 
   const handleAdd = () => {
