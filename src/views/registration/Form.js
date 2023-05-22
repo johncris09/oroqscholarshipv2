@@ -1,4 +1,5 @@
 import React, { useState, useEffect } from 'react'
+import moment from 'moment'
 import {
   CButton,
   CCard,
@@ -28,15 +29,22 @@ const Form = ({
   unitLabel,
   hasUnit,
   onSubmit,
+  year,
+  sem,
+  sp_no,
 }) => {
   const [validated, setValidated] = useState(false)
   const [formData, setFormData] = useState({
+    year: year,
+    sem: sem,
+    sp_no: sp_no,
     lastname: '',
     firstname: '',
     middlename: '',
     suffix: '',
     address: '',
     birthdate: '',
+    age: '',
     civil_status: '',
     sex: '',
     course: '',
@@ -58,6 +66,18 @@ const Form = ({
   useEffect(() => {
     fetchBarangay()
   }, [])
+
+  // const getAge = () => {
+  //   // Calculate the age based on the current date and the birthdate in formData
+  //   const birthdate = moment(formData.age, 'YYYY-MM-DD')
+  //   const age = moment().diff(birthdate, 'years')
+  //   console.info(age)
+  //   // Update the age value in the formData state
+  //   setFormData({
+  //     ...formData,
+  //     age: age.toString(), // Convert the age to a string for displaying in the input field
+  //   })
+  // }
 
   const generateSchoolYearOptions = () => {
     const currentYear = new Date().getFullYear()
@@ -91,10 +111,20 @@ const Form = ({
 
   const handleChange = (e) => {
     const { name, value } = e.target
-    setFormData((prevData) => ({
-      ...prevData,
-      [name]: value,
-    }))
+
+    setFormData({ ...formData, [name]: value })
+
+    if (name === 'birthdate') {
+      const today = new Date()
+      const birthdate = new Date(value)
+      const ageTime = today - birthdate
+      const age = Math.floor(ageTime / (1000 * 60 * 60 * 24 * 365)) // Calculating age in years
+      if (age === 0) {
+        setFormData({ age: '' })
+      } else {
+        setFormData({ age: age.toString() })
+      }
+    }
   }
 
   const handleSubmit = (event) => {
@@ -145,6 +175,32 @@ const Form = ({
         validated={validated}
         onSubmit={handleSubmit}
       >
+        <div className="d-grid gap-2 d-md-flex justify-content-md-end">
+          <h3 className="text-danger">
+            <u>{year + '-' + sem + '-' + sp_no}</u>
+            <CFormInput
+              type="hidden"
+              id="year"
+              name="year"
+              value={formData.year}
+              onChange={handleChange}
+            />
+            <CFormInput
+              type="hidden"
+              id="sem"
+              name="sem"
+              value={formData.sem}
+              onChange={handleChange}
+            />
+            <CFormInput
+              type="hidden"
+              id="sp_no"
+              name="sp_no"
+              value={formData.sp_no}
+              onChange={handleChange}
+            />
+          </h3>
+        </div>
         <CCol md={4}>
           <CFormInput
             type="text"
@@ -244,7 +300,7 @@ const Form = ({
         </CCol>
         <CCol md={3}>
           <CFormInput
-            type="datetime"
+            type="date"
             id="birthdate"
             label={
               <>
@@ -276,9 +332,9 @@ const Form = ({
             name="age"
             value={formData.age}
             onChange={handleChange}
-            readOnly
             feedbackInvalid="Age is required"
             required
+            readOnly
           />
         </CCol>
         <CCol md={3}>
