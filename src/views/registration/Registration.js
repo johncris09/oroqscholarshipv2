@@ -80,7 +80,7 @@ const Registration = () => {
     const currentYear = new Date().getFullYear() // Get the current year
     setCurrentYear(currentYear)
     setCurrentSemester(2)
-  }, [])
+  }, [currentYear, currentSemester, spNo])
 
   const fetchSpNo = async (tableSubmit) => {
     try {
@@ -108,6 +108,8 @@ const Registration = () => {
           const parsedMaxSpNo = parseInt(maxSpNo, 10)
           const nextSpNo = isNaN(parsedMaxSpNo) ? 1 : parsedMaxSpNo + 1
           setSpNo(nextSpNo)
+        } else {
+          setSpNo(1)
         }
       })
 
@@ -123,7 +125,8 @@ const Registration = () => {
         // Filter the data based on the desired year
         const filteredData = data.filter((item) => {
           const year = parseInt(item.year, 10)
-          return year === currentYear
+          const semester = parseInt(item.sem, 10)
+          return year === currentYear && semester === currentSemester
         })
 
         const maxSpNo = filteredData.reduce((max, item) => {
@@ -134,6 +137,8 @@ const Registration = () => {
         const nextSpNo = isNaN(parsedMaxSpNo) ? 1 : parsedMaxSpNo + 1
 
         setSpNo(nextSpNo)
+      } else {
+        setSpNo(1)
       }
     } catch (error) {
       console.error('Error fetching data:', error)
@@ -224,9 +229,9 @@ const Registration = () => {
                   gradeLabel={'Grade Level'}
                   hasUnit={false}
                   unitLabel={''}
-                  year={currentYear}
-                  sem={currentSemester}
-                  spNo={spNo}
+                  currentYear={currentYear}
+                  currentSemester={currentSemester}
+                  nextSpNo={spNo}
                 />
               </CTabPane>
               <CTabPane visible={activeKey === 2}>
@@ -239,9 +244,9 @@ const Registration = () => {
                   gradeLabel={'Year Level'}
                   hasUnit={true}
                   unitLabel={'Units'}
-                  year={currentYear}
-                  sem={currentSemester}
-                  spNo={spNo}
+                  currentYear={currentYear}
+                  currentSemester={currentSemester}
+                  nextSpNo={spNo}
                 />
               </CTabPane>
               <CTabPane visible={activeKey === 3}>
@@ -254,9 +259,9 @@ const Registration = () => {
                   gradeLabel={'Year Level'}
                   hasUnit={true}
                   unitLabel={'No. of Hours'}
-                  year={currentYear}
-                  sem={currentSemester}
-                  spNo={spNo}
+                  currentYear={currentYear}
+                  currentSemester={currentSemester}
+                  nextSpNo={spNo}
                 />
               </CTabPane>
             </CTabContent>
