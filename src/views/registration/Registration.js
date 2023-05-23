@@ -12,7 +12,17 @@ import {
   CTabPane,
 } from '@coreui/react'
 import Form from './Form'
-import { database, ref, get, push, set, serverTimestamp } from './../../firebase'
+import {
+  database,
+  ref,
+  get,
+  push,
+  set,
+  serverTimestamp,
+  query,
+  orderByChild,
+  onValue,
+} from './../../firebase'
 import Swal from 'sweetalert2'
 import withReactContent from 'sweetalert2-react-content'
 const MySwal = withReactContent(Swal)
@@ -28,6 +38,9 @@ const Registration = () => {
   const [hasUnit, setHasUnit] = useState(false)
 
   const [tableSubmit, setTableSubmit] = useState('senior_high')
+  const [spNo, setSpNo] = useState()
+  const [currentYear, setCurrentYear] = useState()
+  const [currentSemester, setCurrentSemester] = useState()
 
   const handleNavClick = (key) => {
     setActiveKey(key)
@@ -39,15 +52,18 @@ const Registration = () => {
       school_table = 'senior_high_school'
       course_table = 'shs_course'
       setTableSubmit('senior_high')
+      fetchSpNo('senior_high')
       setHasUnit(false)
     } else if (key === 2) {
       school_table = 'college_school'
       course_table = 'college_course'
       setTableSubmit('college')
+      fetchSpNo('college')
       setHasUnit(true)
     } else if (key === 3) {
       school_table = 'tvet_school'
       setTableSubmit('tvet')
+      fetchSpNo('tvet')
       setHasUnit(true)
       course_table = 'tvet_course'
     }
@@ -59,7 +75,70 @@ const Registration = () => {
   useEffect(() => {
     fetchSchool(schoolTable)
     fetchCourse(courseTable)
+    fetchSpNo(tableSubmit)
+
+    const currentYear = new Date().getFullYear() // Get the current year
+    setCurrentYear(currentYear)
+    setCurrentSemester(2)
   }, [])
+
+  const fetchSpNo = async (tableSubmit) => {
+    try {
+      const dataRef = query(ref(database, tableSubmit), orderByChild('sp_no'))
+
+      onValue(dataRef, (snapshot) => {
+        if (snapshot.exists()) {
+          const data = []
+          snapshot.forEach((childSnapshot) => {
+            const childData = childSnapshot.val()
+            data.push(childData)
+          })
+
+          // Filter the data based on the desired year
+          const filteredData = data.filter((item) => {
+            const year = parseInt(item.year, 10)
+            const semester = parseInt(item.sem, 10)
+            return year === currentYear && semester === currentSemester
+          })
+
+          const maxSpNo = filteredData.reduce((max, item) => {
+            return item.sp_no > max ? item.sp_no : max
+          }, 0)
+
+          const parsedMaxSpNo = parseInt(maxSpNo, 10)
+          const nextSpNo = isNaN(parsedMaxSpNo) ? 1 : parsedMaxSpNo + 1
+          setSpNo(nextSpNo)
+        }
+      })
+
+      // Fetch the initial data
+      const snapshot = await get(dataRef)
+      if (snapshot.exists()) {
+        const data = []
+        snapshot.forEach((childSnapshot) => {
+          const childData = childSnapshot.val()
+          data.push(childData)
+        })
+
+        // Filter the data based on the desired year
+        const filteredData = data.filter((item) => {
+          const year = parseInt(item.year, 10)
+          return year === currentYear
+        })
+
+        const maxSpNo = filteredData.reduce((max, item) => {
+          return item.sp_no > max ? item.sp_no : max
+        }, 0)
+
+        const parsedMaxSpNo = parseInt(maxSpNo, 10)
+        const nextSpNo = isNaN(parsedMaxSpNo) ? 1 : parsedMaxSpNo + 1
+
+        setSpNo(nextSpNo)
+      }
+    } catch (error) {
+      console.error('Error fetching data:', error)
+    }
+  }
 
   const fetchSchool = async (_table) => {
     try {
@@ -102,6 +181,7 @@ const Registration = () => {
           html: <i>New Record Successfully Added!</i>,
           icon: 'success',
         })
+        fetchSpNo(tableSubmit)
       })
       .catch((error) => {
         console.error('Error adding data:', error)
@@ -144,6 +224,9 @@ const Registration = () => {
                   gradeLabel={'Grade Level'}
                   hasUnit={false}
                   unitLabel={''}
+                  year={currentYear}
+                  sem={currentSemester}
+                  spNo={spNo}
                 />
               </CTabPane>
               <CTabPane visible={activeKey === 2}>
@@ -156,6 +239,9 @@ const Registration = () => {
                   gradeLabel={'Year Level'}
                   hasUnit={true}
                   unitLabel={'Units'}
+                  year={currentYear}
+                  sem={currentSemester}
+                  spNo={spNo}
                 />
               </CTabPane>
               <CTabPane visible={activeKey === 3}>
@@ -168,6 +254,9 @@ const Registration = () => {
                   gradeLabel={'Year Level'}
                   hasUnit={true}
                   unitLabel={'No. of Hours'}
+                  year={currentYear}
+                  sem={currentSemester}
+                  spNo={spNo}
                 />
               </CTabPane>
             </CTabContent>
